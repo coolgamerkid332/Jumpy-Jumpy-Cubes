@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jumpy Jumpy Cubes</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            background-color: #87CEEB;
+        }
+        #startMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        #gameName {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="startMessage">Click or Press Space to Start</div>
+    <div id="gameName">Jumpy Jumpy Cubes</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startMessage = document.getElementById('startMessage');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let gameActive = false;
+
+        const player = {
+            x: 50,
+            y: canvas.height - 70,
+            width: 30,
+            height: 50,
+            speed: 5,
+            jumpForce: 15,
+            velocityY: 0,
+            isJumping: false
+        };
+
+        const obstacles = [];
+        let score = 0;
+        let gameSpeed = 5;
+        let nextObstacleDistance = 0;
+
+        function createObstacle() {
+            const minHeight = 30;
+            const maxHeight = Math.min(70, canvas.height - player.height - 30);
+            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+            
+            const minWidth = 20;
+            const maxWidth = 60;
+            const width = Math.random() * (maxWidth - minWidth) + minWidth;
+            
+            const obstacle = {
+                x: canvas.width + nextObstacleDistance,
+                y: canvas.height - height - 20,
+                width: width,
+                height: height
+            };
+            obstacles.push(obstacle);
+
+            const minGap = Math.max(300, width + 100);
+            const maxGap = 600;
+            nextObstacleDistance = Math.random() * (maxGap - minGap) + minGap;
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function drawGrass() {
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+        }
+
+        function updateObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.x -= gameSpeed;
+            });
+
+            obstacles.forEach((obstacle, index) => {
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(index, 1);
+                    score++;
+                }
+            });
+
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width) {
+                createObstacle();
+            }
+        }
+
+        function checkCollision() {
+            obstacles.forEach(obstacle => {
+                if (
+                    player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y
+                ) {
+                    gameOver();
+                }
+            });
+        }
+
+        function drawScore() {
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 30);
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            player.velocityY += 1; // Gravity
+            player.y += player.velocityY;
+
+            if (player.y + player.height > canvas.height - 20) {
+                player.y = canvas.height - player.height - 20;
+                player.isJumping = false;
+            }
+
+            drawGrass();
+            drawPlayer();
+            updateObstacles();
+            drawObstacles();
+            checkCollision();
+            drawScore();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            gameActive = true;
+            obstacles.length = 0;
+            score = 0;
+            player.x = 50;
+            player.y = canvas.height - player.height - 20;
+            player.velocityY = 0;
+            player.isJumping = false;
+            nextObstacleDistance = 0;
+            startMessage.style.display = 'none';
+            createObstacle();
+            gameLoop();
+        }
+
+        function gameOver() {
+            gameActive = false;
+            startMessage.textContent = `Game Over! Score: ${score}. Click or Press Space to Restart`;
+            startMessage.style.display = 'block';
+        }
+
+        function jump() {
+            if (!player.isJumping) {
+                player.velocityY = -player.jumpForce;
+                player.isJumping = true;
+            }
+        }
+
+        function handleKeyInput(event) {
+            if (event.code === 'Space') {
+                if (!gameActive) {
+                    startGame();
+                } else {
+                    jump();
+                }
+            } else if (gameActive) {
+                if (event.code === 'ArrowLeft') {
+                    player.x -= player.speed;
+                } else if (event.code === 'ArrowRight') {
+                    player.x += player.speed;
+                }
+            }
+        }
+
+        function handleMouseInput(event) {
+            if (event.button === 0) { // Left mouse button
+                if (!gameActive) {
+                    startGame();
+                } else {
+                    jump();
+                }
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyInput);
+        canvas.addEventListener('mousedown', handleMouseInput);
+        startMessage.addEventListener('mousedown', handleMouseInput);
+
+        // Initial draw
+        drawGrass();
+        drawPlayer();
+    </script>
+</body>
+</html>

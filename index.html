@@ -39,52 +39,54 @@
     <div id="startMessage">Click or Press Space to Start</div>
     <div id="gameName">Jumpy Jumpy Cubes</div>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const startMessage = document.getElementById('startMessage');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const startMessage = document.getElementById('startMessage');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-        let gameActive = false;
+let gameActive = false;
 
-        const player = {
-            x: 50,
-            y: canvas.height - 70,
-            width: 30,
-            height: 50,
-            speed: 5,
-            jumpForce: 15,
-            velocityY: 0,
-            isJumping: false
-        };
+const player = {
+    x: 50,
+    y: canvas.height - 70,
+    width: 30,
+    height: 50,
+    speed: 5,
+    jumpForce: 15,
+    velocityY: 0,
+    isJumping: false
+};
 
-        const obstacles = [];
-        let score = 0;
-        let gameSpeed = 5;
-        let nextObstacleDistance = 0;
+const obstacles = [];
+let score = 0;
+let gameSpeed = 5;
+let nextObstacleDistance = 0;
 
-        function createObstacle() {
-            const minHeight = 30;
-            const maxHeight = Math.min(70, canvas.height - player.height - 30);
-            const height = Math.random() * (maxHeight - minHeight) + minHeight;
-            
-            const minWidth = 20;
-            const maxWidth = 60;
-            const width = Math.random() * (maxWidth - minWidth) + minWidth;
-            
-            const obstacle = {
-                x: canvas.width + nextObstacleDistance,
-                y: canvas.height - height - 20,
-                width: width,
-                height: height
-            };
-            obstacles.push(obstacle);
+function createObstacle() {
+    const minHeight = 30;
+    const maxHeight = Math.min(60, canvas.height - player.height - 30); // Reduced max height
+    const height = Math.random() * (maxHeight - minHeight) + minHeight;
+    
+    const minWidth = 20;
+    const maxWidth = 40; // Reduced max width
+    const width = Math.random() * (maxWidth - minWidth) + minWidth;
+    
+    const obstacle = {
+        x: canvas.width + nextObstacleDistance,
+        y: canvas.height - height - 20,
+        width: width,
+        height: height
+    };
+    obstacles.push(obstacle);
 
-            const minGap = Math.max(300, width + 100);
-            const maxGap = 600;
-            nextObstacleDistance = Math.random() * (maxGap - minGap) + minGap;
-        }
+    const minGap = Math.max(250, width + 100); // Reduced minimum gap
+    const maxGap = 450; // Reduced maximum gap
+    nextObstacleDistance = Math.random() * (maxGap - minGap) + minGap;
+}
+
+
 
         function drawPlayer() {
             ctx.fillStyle = 'blue';
